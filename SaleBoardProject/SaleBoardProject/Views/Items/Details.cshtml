@@ -46,6 +46,7 @@
 <div>
     <form asp-action="AddToCart">
         <label class="control-label">Amount:</label>
+        <input type="hidden" asp-for="itemID" />
         <input name="amount" value="0" style="max-width:8%" class="form-control" />
         <input type="submit" value="Add To Cart" class="btn btn-primary" />
     </form>

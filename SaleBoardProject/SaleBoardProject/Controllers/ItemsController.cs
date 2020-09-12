@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -75,14 +76,6 @@ namespace SaleBoardProject.Controllers
             }
 
             return View(item);
-        }
-
-        [Authorize]
-        [HttpPost]
-        public async Task<IActionResult> AddToCart()
-        {
-            //Todo redirect
-            return View(await _context.Items.ToListAsync());
         }
 
         [Authorize]
@@ -185,8 +178,6 @@ namespace SaleBoardProject.Controllers
 
             return View(model);
         }
-
-        //-------------------------------------------------------------------------------------------------------------------------------------
 
         // GET: Items/Create
         [Authorize]
@@ -303,6 +294,155 @@ namespace SaleBoardProject.Controllers
         private bool ItemExists(int id)
         {
             return _context.Items.Any(e => e.itemID == id);
+        }
+
+        //Cart functions
+
+        [Authorize]
+        public IActionResult Cart()
+        {
+            var cartList = new List<Item>();
+
+            if (HttpContext.Session.GetString("cartID") != null)
+            {
+                var cartContentID = HttpContext.Session.GetString("cartID");
+                var cartListID = new List<String>(cartContentID.Split(','));
+
+                var cartContentAMT = HttpContext.Session.GetString("cartAMT");
+                var cartListAMT = new List<String>(cartContentAMT.Split(','));
+
+                var i = 0;
+                while (i < cartListID.Count)
+                {
+                    cartList.Add(_context.Items.Find(cartListID[i]));
+                    cartList[i].Quantity = Int32.Parse(cartListAMT[i]);
+                    i++;
+                }
+            }
+            
+            return View(cartList);
+        }
+
+        [Authorize]
+        [HttpPost]
+        public IActionResult AddToCart(int itemID, int amount)
+        {
+            if (HttpContext.Session.GetString("cartID") != null)
+            {
+                var cartContentID = HttpContext.Session.GetString("cartID");
+                cartContentID = cartContentID + "," + itemID.ToString();
+
+                HttpContext.Session.SetString("cartID", cartContentID);
+
+                var cartContentAMT = HttpContext.Session.GetString("cartAMT");
+                cartContentAMT = cartContentAMT + "," + amount.ToString();
+
+                HttpContext.Session.SetString("cartAMT", cartContentAMT);
+            }
+            else
+            {
+                HttpContext.Session.SetString("cartID", itemID.ToString());
+
+                HttpContext.Session.SetString("cartAMT", amount.ToString());
+            }
+
+            return RedirectToAction("UserHome");
+        }
+
+        [Authorize]
+        [HttpPost]
+        public IActionResult RemoveFromCart(int itemID)
+        {
+            var cartContentID = HttpContext.Session.GetString("cartID");
+            var cartListID = new List<String>(cartContentID.Split(','));
+
+            var temp = cartListID.IndexOf(itemID.ToString());
+            if (cartListID.Remove(itemID.ToString()))
+            {
+                var cartContentAMT = HttpContext.Session.GetString("cartAMT");
+                var cartListAMT = new List<String>(cartContentAMT.Split(','));
+
+                cartListAMT.RemoveAt(temp);
+
+                cartContentAMT = "";
+
+                foreach (var item in cartListAMT)
+                {
+                    cartContentAMT = cartContentAMT + "," + item.ToString();
+                }
+
+                HttpContext.Session.SetString("cartAMT", cartContentAMT);
+            }
+
+            cartContentID = "";
+
+            foreach (var item in cartListID)
+            {
+                cartContentID = cartContentID + "," + item.ToString();
+            }
+
+            HttpContext.Session.SetString("cartID", cartContentID);
+
+            
+
+            //Todo redirect to cart page
+            return RedirectToAction("Cart");
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> BuyCart()
+        {
+            if (HttpContext.Session.GetString("cartID") != null)
+            {
+                var cartContentID = HttpContext.Session.GetString("cartID");
+                var cartListID = new List<String>(cartContentID.Split(','));
+
+                var cartContentAMT = HttpContext.Session.GetString("cartAMT");
+                var cartListAMT = new List<String>(cartContentAMT.Split(','));
+
+                var itemList = new List<Item>();
+
+                foreach (var item in cartListID)
+                {
+                    itemList.Add(_context.Items.Find(item));
+                }
+
+                var transaction = new Transaction();
+                await _context.AddAsync(transaction);
+
+                var i = 0;
+                while (i < cartListID.Count())
+                {
+                    var itemSale = new ItemSale
+                    {
+                        item = itemList[i],
+                        transactionID = transaction.transactionID,
+                        quantity = Int32.Parse(cartListAMT[i])
+                    };
+                    await _context.AddAsync(itemSale);
+                    await _context.SaveChangesAsync();
+                    transaction.sales.Add(itemSale);
+                    i++;
+                }
+                
+                double costTotal = 0;
+
+                foreach (var item in transaction.sales)
+                {
+                    costTotal = costTotal + (item.quantity * item.item.price);
+                }
+
+                transaction.price = costTotal;
+
+                var user = await _userManager.GetUserAsync(User);
+                transaction.buyer = user.UserName;
+
+                await _context.AddAsync(transaction);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("UserHome");
         }
     }
 }

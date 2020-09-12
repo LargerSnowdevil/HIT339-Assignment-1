@@ -31,9 +31,14 @@ namespace SaleBoardProject.Controllers
         }
 
         [Authorize]
-        public IActionResult Index()
+        public async Task<IActionResult> IndexAsync()
         {
-            //return View();
+            var userLogin = await _userManager.GetUserAsync(User);
+            var user = _context.RegisteredUsers.Find(userLogin.UserName);
+
+            HttpContext.Session.SetString("userUsername", user.Username);
+            HttpContext.Session.SetInt32("userAge", user.age);
+            HttpContext.Session.SetString("userName", user.name);
             return RedirectToAction("Index", "Items");
         }
 
