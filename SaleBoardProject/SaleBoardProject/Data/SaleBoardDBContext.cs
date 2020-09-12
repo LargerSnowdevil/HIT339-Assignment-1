@@ -17,5 +17,11 @@ namespace SaleBoardProject.Data
 
         public DbSet<User> RegisteredUsers { get; set; }
 
+        public DbSet<Item> Items { get; set; }
+
+        public DbSet<ItemSale> ItemSales { get; set; }
+
+        public DbSet<Transaction> Transactions { get; set; }
+
     }
 }

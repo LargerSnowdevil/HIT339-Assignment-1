@@ -33,8 +33,8 @@ namespace SaleBoardProject.Controllers
         [Authorize]
         public IActionResult Index()
         {
-            return View();
-            //return RedirectToAction("Index");
+            //return View();
+            return RedirectToAction("Index", "Items");
         }
 
         [Authorize]

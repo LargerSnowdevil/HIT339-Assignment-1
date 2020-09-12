@@ -8,7 +8,7 @@ namespace SaleBoardProject.Models
 {
     public class Item
     {
-        public int ID { get; set; }
+        public int itemID { get; set; }
         [Display(Name = "Item Name")]
         public String name { get; set; }
         [Display(Name = "Description")]

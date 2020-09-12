@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SaleBoardProject.Data;
 
 namespace SaleBoardProject.Migrations
 {
     [DbContext(typeof(SaleBoardDBContext))]
-    partial class SaleBoardDBContextModelSnapshot : ModelSnapshot
+    [Migration("20200912074245_sales_Added")]
+    partial class sales_Added
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

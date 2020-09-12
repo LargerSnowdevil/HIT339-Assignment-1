@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SaleBoardProject.Data;
 
 namespace SaleBoardProject.Migrations
 {
     [DbContext(typeof(SaleBoardDBContext))]
-    partial class SaleBoardDBContextModelSnapshot : ModelSnapshot
+    [Migration("20200912051357_Item_Added")]
+    partial class Item_Added
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -217,7 +219,7 @@ namespace SaleBoardProject.Migrations
 
             modelBuilder.Entity("SaleBoardProject.Models.Item", b =>
                 {
-                    b.Property<int>("itemID")
+                    b.Property<int>("ID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
@@ -237,52 +239,9 @@ namespace SaleBoardProject.Migrations
                     b.Property<string>("seller")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("itemID");
+                    b.HasKey("ID");
 
-                    b.ToTable("Items");
-                });
-
-            modelBuilder.Entity("SaleBoardProject.Models.ItemSale", b =>
-                {
-                    b.Property<int>("itemSaleID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int?>("itemID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("quantity")
-                        .HasColumnType("int");
-
-                    b.Property<int>("transactionID")
-                        .HasColumnType("int");
-
-                    b.HasKey("itemSaleID");
-
-                    b.HasIndex("itemID");
-
-                    b.HasIndex("transactionID");
-
-                    b.ToTable("ItemSales");
-                });
-
-            modelBuilder.Entity("SaleBoardProject.Models.Transaction", b =>
-                {
-                    b.Property<int>("transactionID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("buyer")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("price")
-                        .HasColumnType("float");
-
-                    b.HasKey("transactionID");
-
-                    b.ToTable("Transactions");
+                    b.ToTable("Item");
                 });
 
             modelBuilder.Entity("SaleBoardProject.Models.User", b =>
@@ -357,19 +316,6 @@ namespace SaleBoardProject.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("SaleBoardProject.Models.ItemSale", b =>
-                {
-                    b.HasOne("SaleBoardProject.Models.Item", "item")
-                        .WithMany()
-                        .HasForeignKey("itemID");
-
-                    b.HasOne("SaleBoardProject.Models.Transaction", null)
-                        .WithMany("sales")
-                        .HasForeignKey("transactionID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

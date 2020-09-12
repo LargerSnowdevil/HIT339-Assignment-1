@@ -1,0 +1,85 @@
+﻿@model SaleBoardProject.Models.UserHomeViewModel
+
+@{
+    ViewData["Title"] = "Catalouge";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Home</h1>
+
+<p>
+    <a asp-action="Create">Create Listing</a>
+</p>
+
+<h3>Listed Sales</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.itemsForSale[0].name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.itemsForSale[0].description)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.itemsForSale[0].price)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.itemsForSale[0].Quantity)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        
+        @foreach (var item in Model.itemsForSale)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.description)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.price)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Quantity)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.itemID">Edit</a> |
+                    <a asp-action="Delete" asp-route-id="@item.itemID">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h3>Buyers History</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.transactionHistory[0].buyer)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.transactionHistory[0].Spending)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+
+        @foreach (var item in Model.transactionHistory)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.buyer)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Spending)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
