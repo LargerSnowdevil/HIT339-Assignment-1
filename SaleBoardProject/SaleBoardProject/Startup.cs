@@ -50,7 +50,8 @@ namespace SaleBoardProject
 
             services.AddSession(options => 
             {
-                options.IdleTimeout = TimeSpan.FromSeconds(10);
+                options.IdleTimeout = TimeSpan.FromSeconds(900);
+                options.Cookie.IsEssential = true;
                 options.Cookie.HttpOnly = true;
             });
         }

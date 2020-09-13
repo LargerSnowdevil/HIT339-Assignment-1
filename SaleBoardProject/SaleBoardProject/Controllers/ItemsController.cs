@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SaleBoardProject.Data;
 using SaleBoardProject.Models;
 
@@ -228,10 +229,11 @@ namespace SaleBoardProject.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,name,description,price,Quantity")] Item item)
+        public async Task<IActionResult> Edit(int id, [Bind("itemID,name,description,price,Quantity")] Item item)
         {
             var user = await _userManager.GetUserAsync(User);
             item.seller = user.UserName;
+
             if (id != item.itemID)
             {
                 return NotFound();
@@ -241,6 +243,7 @@ namespace SaleBoardProject.Controllers
             {
                 try
                 {
+                    await _context.SaveChangesAsync();
                     _context.Update(item);
                     await _context.SaveChangesAsync();
                 }
@@ -255,7 +258,7 @@ namespace SaleBoardProject.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("UserHome");
             }
             return View(item);
         }
@@ -307,14 +310,17 @@ namespace SaleBoardProject.Controllers
             {
                 var cartContentID = HttpContext.Session.GetString("cartID");
                 var cartListID = new List<String>(cartContentID.Split(','));
+                HttpContext.Session.SetString("cartID", cartContentID);
 
                 var cartContentAMT = HttpContext.Session.GetString("cartAMT");
                 var cartListAMT = new List<String>(cartContentAMT.Split(','));
+                HttpContext.Session.SetString("cartAMT", cartContentAMT);
 
                 var i = 0;
                 while (i < cartListID.Count)
                 {
-                    cartList.Add(_context.Items.Find(cartListID[i]));
+                    var temp = Int32.Parse(cartListID[i]);
+                    cartList.Add(_context.Items.Find(temp));
                     cartList[i].Quantity = Int32.Parse(cartListAMT[i]);
                     i++;
                 }
@@ -346,46 +352,60 @@ namespace SaleBoardProject.Controllers
                 HttpContext.Session.SetString("cartAMT", amount.ToString());
             }
 
-            return RedirectToAction("UserHome");
+            return RedirectToAction("Index");
         }
 
         [Authorize]
         [HttpPost]
         public IActionResult RemoveFromCart(int itemID)
         {
-            var cartContentID = HttpContext.Session.GetString("cartID");
-            var cartListID = new List<String>(cartContentID.Split(','));
-
-            var temp = cartListID.IndexOf(itemID.ToString());
-            if (cartListID.Remove(itemID.ToString()))
+            if (HttpContext.Session.GetString("cartID") != null)
             {
-                var cartContentAMT = HttpContext.Session.GetString("cartAMT");
-                var cartListAMT = new List<String>(cartContentAMT.Split(','));
+                var cartContentID = HttpContext.Session.GetString("cartID");
+                var cartListID = new List<String>(cartContentID.Split(','));
 
-                cartListAMT.RemoveAt(temp);
-
-                cartContentAMT = "";
-
-                foreach (var item in cartListAMT)
+                var temp = cartListID.IndexOf(itemID.ToString());
+                if (cartListID.Remove(itemID.ToString()))
                 {
-                    cartContentAMT = cartContentAMT + "," + item.ToString();
+                    var cartContentAMT = HttpContext.Session.GetString("cartAMT");
+                    var cartListAMT = new List<String>(cartContentAMT.Split(','));
+
+                    cartListAMT.RemoveAt(temp);
+
+                    cartContentAMT = "";
+
+                    foreach (var item in cartListAMT)
+                    {
+                        if (cartContentAMT.CompareTo("") == 0)
+                        {
+                            cartContentAMT = item.ToString();
+                        }
+                        else
+                        {
+                            cartContentAMT = cartContentAMT + "," + item.ToString();
+                        }
+                    }
+
+                    HttpContext.Session.SetString("cartAMT", cartContentAMT);
                 }
 
-                HttpContext.Session.SetString("cartAMT", cartContentAMT);
+                cartContentID = "";
+
+                foreach (var item in cartListID)
+                {
+                    if (cartContentID.CompareTo("") == 0)
+                    {
+                        cartContentID = item.ToString();
+                    }
+                    else
+                    {
+                        cartContentID = cartContentID + "," + item.ToString();
+                    }
+                }
+
+                HttpContext.Session.SetString("cartID", cartContentID);
             }
-
-            cartContentID = "";
-
-            foreach (var item in cartListID)
-            {
-                cartContentID = cartContentID + "," + item.ToString();
-            }
-
-            HttpContext.Session.SetString("cartID", cartContentID);
-
             
-
-            //Todo redirect to cart page
             return RedirectToAction("Cart");
         }
 
@@ -405,11 +425,13 @@ namespace SaleBoardProject.Controllers
 
                 foreach (var item in cartListID)
                 {
-                    itemList.Add(_context.Items.Find(item));
+                    var temp = Int32.Parse(item);
+                    itemList.Add(_context.Items.Find(temp));
                 }
 
                 var transaction = new Transaction();
                 await _context.AddAsync(transaction);
+                await _context.SaveChangesAsync();
 
                 var i = 0;
                 while (i < cartListID.Count())
@@ -420,12 +442,16 @@ namespace SaleBoardProject.Controllers
                         transactionID = transaction.transactionID,
                         quantity = Int32.Parse(cartListAMT[i])
                     };
+
+                    var item = _context.Items.Find(itemList[i].itemID);
+                    item.Quantity = item.Quantity - itemSale.quantity;
+                    _context.Items.Update(item);
+
                     await _context.AddAsync(itemSale);
                     await _context.SaveChangesAsync();
-                    transaction.sales.Add(itemSale);
                     i++;
                 }
-                
+
                 double costTotal = 0;
 
                 foreach (var item in transaction.sales)
@@ -438,8 +464,11 @@ namespace SaleBoardProject.Controllers
                 var user = await _userManager.GetUserAsync(User);
                 transaction.buyer = user.UserName;
 
-                await _context.AddAsync(transaction);
+                _context.Update(transaction);
                 await _context.SaveChangesAsync();
+
+                HttpContext.Session.Remove("cartID");
+                HttpContext.Session.Remove("cartAMT");
             }
 
             return RedirectToAction("UserHome");

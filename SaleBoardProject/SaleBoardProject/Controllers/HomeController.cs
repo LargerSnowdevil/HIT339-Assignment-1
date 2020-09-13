@@ -64,7 +64,6 @@ namespace SaleBoardProject.Controllers
 
                 if (result.Succeeded)
                 {
-                    //todo redirect to all items report
                     return RedirectToAction("Index");
                 }
             }
@@ -99,7 +98,6 @@ namespace SaleBoardProject.Controllers
                 //    image = null;
                 //}
 
-                //Todo change this to Seed the admin if i have time
                 bool isAdmin = false;
                 if (username.CompareTo("Admin") == 0)
                 {
@@ -122,17 +120,17 @@ namespace SaleBoardProject.Controllers
 
                 if (signInResult.Succeeded)
                 {
-                    //todo redirect to all items report
                     return RedirectToAction("Index");
                 }
             }
 
-            //todo redirect to all items report
             return View();
         }
 
         public async Task<IActionResult> Logout()
         {
+            HttpContext.Session.Clear();
+
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index");
         }

@@ -7,6 +7,9 @@
 
 <h1>Cart Contents</h1>
 
+<form asp-action="BuyCart">
+    <input type="submit" value="Confirm Purchases" class="btn btn-danger" />
+</form>
 <table class="table">
     <thead>
         <tr>
@@ -48,7 +51,9 @@
                         @Html.DisplayFor(modelItem => item.seller)
                     </td>*@
                 <td>
-                    <a asp-action="Details" asp-route-id="@item.itemID">Details</a>
+                    <form asp-action="RemoveFromCart" asp-route-itemID="@item.itemID">
+                        <input type="submit" value="Remove" class="btn btn-danger" />
+                    </form>
                 </td>
             </tr>
         }
